@@ -3,142 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYSTEM_OVERRIDE_v4.0</title>
+    <title>SYSTEM_OVERRIDE_PREMIUM</title>
     <style>
-        :root { --glow: #00FF41; --dim: #003B00; }
-        body, html { margin: 0; padding: 0; background: black; color: var(--glow); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; }
+        :root { --glow: #00FF41; --alert: #FF0000; }
         
-        /* Matrix Background */
-        #matrix { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
+        body, html { 
+            margin: 0; padding: 0; background: black; 
+            color: var(--glow); font-family: 'Courier New', monospace; 
+            overflow: hidden; height: 100vh; width: 100vw;
+        }
 
-        /* CRT Scanline Effect */
-        body::before {
+        /* Matrix Rain Canvas */
+        #matrix { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.4; }
+
+        /* CRT Overlay */
+        .crt::before {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             z-index: 10; background-size: 100% 2px, 3px 100%; pointer-events: none;
         }
 
-        /* Interface Layout */
-        #ui-container { display: grid; grid-template-columns: 250px 1fr; height: 100vh; z-index: 5; position: relative; }
+        /* Main UI */
+        #ui-wrapper { 
+            position: relative; z-index: 5; display: flex; 
+            flex-direction: column; height: 100vh; 
+        }
+
+        header { padding: 10px; border-bottom: 1px solid var(--glow); background: rgba(0, 10, 0, 0.8); text-align: center; }
+
+        .main-content { display: flex; flex: 1; overflow: hidden; }
+
+        nav { width: 200px; border-right: 1px solid var(--glow); padding: 10px; background: rgba(0,0,0,0.8); }
         
-        nav { border-right: 1px solid var(--glow); padding: 20px; background: rgba(0,0,0,0.8); }
         nav button { 
-            display: block; width: 100%; background: none; border: 1px solid var(--glow); 
-            color: var(--glow); padding: 10px; margin-bottom: 10px; cursor: pointer; text-transform: uppercase;
+            display: block; width: 100%; background: black; border: 1px solid var(--glow); 
+            color: var(--glow); padding: 8px; margin-bottom: 8px; cursor: pointer; font-size: 0.8em;
         }
-        nav button:hover { background: var(--glow); color: black; box-shadow: 0 0 10px var(--glow); }
 
-        main { padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .module { border: 2px solid var(--glow); padding: 30px; background: rgba(0,20,0,0.9); display: none; width: 80%; max-width: 600px; box-shadow: 0 0 20px var(--dim); }
-        .active { display: block; animation: flicker 0.1s infinite; }
-
-        input { background: black; border: 1px solid var(--glow); color: var(--glow); padding: 5px; width: 100%; margin-top: 10px; }
+        nav button:hover { background: var(--glow); color: black; }
         
-        @keyframes flicker {
-            0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.99; }
+        .destruct-btn { border-color: var(--alert); color: var(--alert); margin-top: 20px; font-weight: bold; }
+        .destruct-btn:hover { background: var(--alert); color: white; }
+
+        /* Module Windows */
+        .display-area { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        .module { 
+            display: none; border: 2px solid var(--glow); background: rgba(0, 15, 0, 0.95);
+            padding: 20px; width: 90%; max-width: 500px; text-align: center;
+            box-shadow: 0 0 20px var(--glow);
         }
+        .active { display: block; animation: powerOn 0.3s ease-out; }
+
+        /* Fake 3D Earth */
+        .earth-container {
+            width: 150px; height: 150px; border-radius: 50%; margin: 10px auto;
+            border: 1px solid var(--glow); position: relative;
+            background: radial-gradient(circle at 30% 30%, #003b00, #000);
+            box-shadow: inset -10px -10px 50px #000, 0 0 20px var(--glow);
+            overflow: hidden;
+        }
+        .earth-grid {
+            position: absolute; width: 200%; height: 100%;
+            background: repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,255,65,0.2) 21px),
+                        repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,255,65,0.2) 21px);
+            animation: rotateWorld 10s linear infinite;
+        }
+
+        /* Animations */
+        @keyframes rotateWorld { from { left: 0; } to { left: -100%; } }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            50% { transform: translate(-1px, 2px) rotate(1deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        @keyframes powerOn { from { transform: scaleY(0.01) scaleX(0); } to { transform: scaleY(1) scaleX(1); } }
+        
+        .shaking { animation: shake 0.2s infinite; background-color: rgba(255, 0, 0, 0.3) !important; }
+        .red-alert { border-color: var(--alert) !important; color: var(--alert) !important; box-shadow: 0 0 30px var(--alert) !important; }
+
+        input { background: transparent; border: 1px solid var(--glow); color: var(--glow); padding: 8px; margin: 5px; width: 80%; text-align: center; }
     </style>
 </head>
-<body>
+<body class="crt">
 
 <canvas id="matrix"></canvas>
 
-<div id="ui-container">
-    <nav>
-        <h2 style="font-size: 1.2em;">CORE_ACCESS</h2>
-        <hr color="#00FF41">
-        <button onclick="showModule('geo')">Location Tracker</button>
-        <button onclick="showModule('missile')">Missile Command</button>
-        <button onclick="showModule('device')">Device Infiltrator</button>
-        <button onclick="showModule('world')">Global Uplink</button>
-    </nav>
+<div id="ui-wrapper">
+    <header><h1>SYSTEM_OVERRIDE_v5.2</h1></header>
+    
+    <div class="main-content">
+        <nav>
+            <button onclick="openMod('geo')">LOCATION_TRACE</button>
+            <button onclick="openMod('missile')">MISSILE_CONTROL</button>
+            <button onclick="openMod('net')">GLOBAL_HACK</button>
+            <button class="destruct-btn" onclick="initDestruct()">SELF_DESTRUCT</button>
+        </nav>
 
-    <main>
-        <div id="geo" class="module">
-            <h3>[X] TARGET_GEO_LOCATOR</h3>
-            <p>Enter Phone Number:</p>
-            <input type="text" placeholder="+1 (555) 000-0000">
-            <button onclick="fakeLoad('geo-out')" style="margin-top:10px">TRACE_SIGNAL</button>
-            <p id="geo-out"></p>
-        </div>
+        <div class="display-area">
+            <div id="missile" class="module">
+                <h3>STRIKE_COORDINATOR</h3>
+                <div class="earth-container"><div class="earth-grid"></div></div>
+                <input id="m_source" type="text" placeholder="SOURCE_COUNTRY">
+                <input id="m_target" type="text" placeholder="TARGET_COORDINATES">
+                <button onclick="runHack('missile-status')" style="width:85%; background:red; color:white; border:none; padding:10px; margin-top:10px;">CONFIRM_LAUNCH</button>
+                <p id="missile-status">STANDING BY...</p>
+            </div>
 
-        <div id="missile" class="module">
-            <h3>[!] STRATEGIC_LAUNCH_SYSTEM</h3>
-            <p>Source Country: <input type="text" placeholder="e.g. Russia"></p>
-            <p>Target Destination: <input type="text" placeholder="e.g. Mars"></p>
-            <button onclick="fakeLoad('missile-out')" style="color: red; border-color: red;">INITIATE_STRIKE</button>
-            <p id="missile-out"></p>
-        </div>
+            <div id="geo" class="module">
+                <h3>SATELLITE_UPLINK</h3>
+                <div id="map-faking" style="height:100px; border:1px dashed var(--glow); margin-bottom:10px; font-size:10px; overflow:hidden;">
+                    [SCANNING_GRID_A1...]<br>[SCANNING_GRID_B4...]<br>[PINGING_CELL_TOWER_332...]
+                </div>
+                <input type="text" placeholder="ENTER_MAC_OR_PHONE">
+                <button onclick="runHack('geo-status')" style="width:85%; margin-top:10px; background:none; color:var(--glow); border:1px solid var(--glow);">TRACE_ID</button>
+                <p id="geo-status"></p>
+            </div>
 
-        <div id="device" class="module">
-            <h3>[#] REMOTE_DEVICE_BREACH</h3>
-            <p>Searching for nearby Bluetooth/IP...</p>
-            <ul id="device-list">
-                <li>iPhone_14_Pro (Secured)</li>
-                <li>Smart_Fridge_v2 (Vulnerable)</li>
-            </ul>
-            <button onclick="fakeLoad('device-out')">EXPLOIT_KERNEL</button>
-            <p id="device-out"></p>
-        </div>
-
-        <div id="world" class="module">
-            <h3>[W] GLOBAL_NET_OVERRIDE</h3>
-            <div style="font-size: 0.7em; color: var(--dim);">[01001011 01100101]</div>
-            <p>SYNCING WORLDWIDE SATELLITES...</p>
-            <div style="width: 100%; height: 10px; border: 1px solid var(--glow);">
-                <div id="progress" style="width: 0%; height: 100%; background: var(--glow);"></div>
+            <div id="net" class="module active">
+                <h3>NETWORK_INFILTRATOR</h3>
+                <p>GLOBAL STATUS: <span style="color:red">PROTECTED</span></p>
+                <div style="width: 100%; border: 1px solid var(--glow); height: 20px;">
+                    <div id="p-bar" style="width: 0%; height: 100%; background: var(--glow);"></div>
+                </div>
+                <button onclick="startNetHack()" style="margin-top:15px; width:80%;">INITIATE_OVERRIDE</button>
             </div>
         </div>
-    </main>
+    </div>
 </div>
 
 <script>
-    // --- Matrix Animation ---
+    // --- Matrix Rain Logic ---
     const canvas = document.getElementById('matrix');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%";
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
+    let width, height, columns, drops;
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        columns = Math.floor(width / 20);
+        drops = Array(columns).fill(1);
+    }
 
     function drawMatrix() {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#00FF41";
-        ctx.font = fontSize + "px monospace";
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#00FF41';
+        ctx.font = '20px monospace';
         for (let i = 0; i < drops.length; i++) {
-            const text = letters.charAt(Math.floor(Math.random() * letters.length));
-            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            const text = String.fromCharCode(0x30A0 + Math.random() * 96);
+            ctx.fillText(text, i * 20, drops[i] * 20);
+            if (drops[i] * 20 > height && Math.random() > 0.975) drops[i] = 0;
             drops[i]++;
         }
     }
-    setInterval(drawMatrix, 33);
 
-    // --- UI Logic ---
-    function showModule(id) {
+    window.addEventListener('resize', resize);
+    resize();
+    setInterval(drawMatrix, 35);
+
+    // --- UI Functions ---
+    function openMod(id) {
         document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(id === 'world') startProgress();
     }
 
-    function fakeLoad(outputId) {
-        const el = document.getElementById(outputId);
-        el.innerHTML = "BREACHING...";
-        setTimeout(() => { el.innerHTML = "ACCESS GRANTED. DATA EXFILTRATED."; }, 2000);
+    function runHack(outputId) {
+        const out = document.getElementById(outputId);
+        out.innerHTML = "BYPASSING_ENCRYPTION...";
+        setTimeout(() => { out.innerHTML = "ACCESS_GRANTED. COMMAND_EXECUTED."; }, 2000);
     }
 
-    function startProgress() {
-        let bar = document.getElementById('progress');
-        let width = 0;
-        let interval = setInterval(() => {
-            if (width >= 100) clearInterval(interval);
-            else { width++; bar.style.width = width + '%'; }
-        }, 50);
+    function startNetHack() {
+        let bar = document.getElementById('p-bar');
+        let val = 0;
+        let int = setInterval(() => {
+            val += 2;
+            bar.style.width = val + '%';
+            if(val >= 100) { clearInterval(int); alert("WORLD_INTERNET_CONTROL_ESTABLISHED"); }
+        }, 100);
+    }
+
+    function initDestruct() {
+        document.body.classList.add('shaking');
+        document.querySelectorAll('.module').forEach(m => m.classList.add('red-alert'));
+        let count = 5;
+        const btn = document.querySelector('.destruct-btn');
+        let timer = setInterval(() => {
+            btn.innerHTML = "T-MINUS " + count;
+            count--;
+            if(count < 0) {
+                clearInterval(timer);
+                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:5vw;'>CONNECTION LOST: SYSTEM_TERMINATED</h1>";
+                document.body.style.backgroundColor = "black";
+            }
+        }, 1000);
     }
 </script>
-
 </body>
 </html>
