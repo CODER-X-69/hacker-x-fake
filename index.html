@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM_OVERRIDE_v4.0</title>
+    <style>
+        :root { --glow: #00FF41; --dim: #003B00; }
+        body, html { margin: 0; padding: 0; background: black; color: var(--glow); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; }
+        
+        /* Matrix Background */
+        #matrix { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
+
+        /* CRT Scanline Effect */
+        body::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
+
+        /* Interface Layout */
+        #ui-container { display: grid; grid-template-columns: 250px 1fr; height: 100vh; z-index: 5; position: relative; }
+        
+        nav { border-right: 1px solid var(--glow); padding: 20px; background: rgba(0,0,0,0.8); }
+        nav button { 
+            display: block; width: 100%; background: none; border: 1px solid var(--glow); 
+            color: var(--glow); padding: 10px; margin-bottom: 10px; cursor: pointer; text-transform: uppercase;
+        }
+        nav button:hover { background: var(--glow); color: black; box-shadow: 0 0 10px var(--glow); }
+
+        main { padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .module { border: 2px solid var(--glow); padding: 30px; background: rgba(0,20,0,0.9); display: none; width: 80%; max-width: 600px; box-shadow: 0 0 20px var(--dim); }
+        .active { display: block; animation: flicker 0.1s infinite; }
+
+        input { background: black; border: 1px solid var(--glow); color: var(--glow); padding: 5px; width: 100%; margin-top: 10px; }
+        
+        @keyframes flicker {
+            0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.99; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div id="ui-container">
+    <nav>
+        <h2 style="font-size: 1.2em;">CORE_ACCESS</h2>
+        <hr color="#00FF41">
+        <button onclick="showModule('geo')">Location Tracker</button>
+        <button onclick="showModule('missile')">Missile Command</button>
+        <button onclick="showModule('device')">Device Infiltrator</button>
+        <button onclick="showModule('world')">Global Uplink</button>
+    </nav>
+
+    <main>
+        <div id="geo" class="module">
+            <h3>[X] TARGET_GEO_LOCATOR</h3>
+            <p>Enter Phone Number:</p>
+            <input type="text" placeholder="+1 (555) 000-0000">
+            <button onclick="fakeLoad('geo-out')" style="margin-top:10px">TRACE_SIGNAL</button>
+            <p id="geo-out"></p>
+        </div>
+
+        <div id="missile" class="module">
+            <h3>[!] STRATEGIC_LAUNCH_SYSTEM</h3>
+            <p>Source Country: <input type="text" placeholder="e.g. Russia"></p>
+            <p>Target Destination: <input type="text" placeholder="e.g. Mars"></p>
+            <button onclick="fakeLoad('missile-out')" style="color: red; border-color: red;">INITIATE_STRIKE</button>
+            <p id="missile-out"></p>
+        </div>
+
+        <div id="device" class="module">
+            <h3>[#] REMOTE_DEVICE_BREACH</h3>
+            <p>Searching for nearby Bluetooth/IP...</p>
+            <ul id="device-list">
+                <li>iPhone_14_Pro (Secured)</li>
+                <li>Smart_Fridge_v2 (Vulnerable)</li>
+            </ul>
+            <button onclick="fakeLoad('device-out')">EXPLOIT_KERNEL</button>
+            <p id="device-out"></p>
+        </div>
+
+        <div id="world" class="module">
+            <h3>[W] GLOBAL_NET_OVERRIDE</h3>
+            <div style="font-size: 0.7em; color: var(--dim);">[01001011 01100101]</div>
+            <p>SYNCING WORLDWIDE SATELLITES...</p>
+            <div style="width: 100%; height: 10px; border: 1px solid var(--glow);">
+                <div id="progress" style="width: 0%; height: 100%; background: var(--glow);"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // --- Matrix Animation ---
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#00FF41";
+        ctx.font = fontSize + "px monospace";
+        for (let i = 0; i < drops.length; i++) {
+            const text = letters.charAt(Math.floor(Math.random() * letters.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    // --- UI Logic ---
+    function showModule(id) {
+        document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'world') startProgress();
+    }
+
+    function fakeLoad(outputId) {
+        const el = document.getElementById(outputId);
+        el.innerHTML = "BREACHING...";
+        setTimeout(() => { el.innerHTML = "ACCESS GRANTED. DATA EXFILTRATED."; }, 2000);
+    }
+
+    function startProgress() {
+        let bar = document.getElementById('progress');
+        let width = 0;
+        let interval = setInterval(() => {
+            if (width >= 100) clearInterval(interval);
+            else { width++; bar.style.width = width + '%'; }
+        }, 50);
+    }
+</script>
+
+</body>
+</html>
